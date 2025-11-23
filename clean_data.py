@@ -1,11 +1,10 @@
 import os
 import re
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import plotly.express as px
 import sklearn.preprocessing as pre
-import seaborn as sns
 import umap
 
 
@@ -33,16 +32,10 @@ shoe_data["CompShoe"] = shoe_data["Use"].apply(
     )
 feat_names = [
     "TotalScore",
-    "TotalReviews",
     "ShoeWeight",
     "ToeDrop",
     "FootHeight",
     "USRankNum",
-    "FiveStars",
-    "FourStars",
-    "ThreeStars",
-    "TwoStars",
-    "OneStars",
     "Terrain01",
     "ArchNum",
     "CompShoe"
@@ -53,13 +46,38 @@ cont_data = cont_raw.values
 X_scaled = pre.StandardScaler().fit_transform(cont_data)
 red = umap.UMAP()
 emb = red.fit_transform(X_scaled)
+cont_raw.loc[:, "emb0"] = emb[:, 0]
+cont_raw.loc[:, "emb1"] = emb[:, 1]
 
-sns.set(style="white", rc={"figure.figsize": (8, 8)})
-plt.scatter(
-    emb[:, 0],
-    emb[:, 1],
-    s=(max(cont_raw["USRankNum"]) - cont_raw["USRankNum"]) / 10,
-    c=cont_raw["TotalScore"],
-    cmap="RdYlGn"
+px_data = pd.merge(
+    shoe_data,
+    cont_raw[["emb0", "emb1"]],
+    left_index=True,
+    right_index=True,
+    how="inner"
+)
+bsize = (max(px_data["USRankNum"]) - px_data["USRankNum"] + 1) / 10
+px_data.loc[:, "bsize"] = bsize
+
+# sns.set(style="white", rc={"figure.figsize": (8, 8)})
+fig = px.scatter(
+    px_data,
+    x="emb0",
+    y="emb1",
+    color="TotalScore",
+    color_continuous_scale="RdYlGn",
+    size="bsize",
+    hover_name="ShoeName",
+    hover_data={
+        "emb0": False,
+        "emb1": False,
+        "bsize": False,
+        "Company": True,
+        "TotalScore": True,
+        "USRankNum": True,
+        "PriceUS": px_data["Price"].apply(lambda x: "${:.2f}".format(x)),
+        "Terrain": True,
+        "Arch": True,
+        "Use": True}
     )
-plt.show()
+fig.show()
