@@ -24,10 +24,16 @@ shoe_data_raw = pd.read_csv(
     )
 shoe_data = shoe_data_raw.dropna(how="all")
 shoe_data["USRankNum"] = shoe_data["USARanking"].apply(get_us_rank)
+shoe_data["Terrain01"] = shoe_data["Terrain"].apply(lambda x: int(x == "Road"))
+shoe_data["ArchNum"] = shoe_data["Arch"].map(
+    {"Neutral": 0, "Stability": 1, "Motion Control": 2}
+)
+shoe_data["CompShoe"] = shoe_data["Use"].apply(
+    lambda x: int(x == "Competition")
+    )
 feat_names = [
     "TotalScore",
     "TotalReviews",
-    "Price",
     "ShoeWeight",
     "ToeDrop",
     "FootHeight",
@@ -36,7 +42,10 @@ feat_names = [
     "FourStars",
     "ThreeStars",
     "TwoStars",
-    "OneStars"
+    "OneStars",
+    "Terrain01",
+    "ArchNum",
+    "CompShoe"
 ]
 
 cont_raw = shoe_data[feat_names].dropna()
