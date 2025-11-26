@@ -4,3 +4,5 @@ pandas
 scikit-learn
 umap-learn
 seaborn
+plotly
+networkx
